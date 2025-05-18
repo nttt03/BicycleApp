@@ -5,8 +5,8 @@ import firestore from "@react-native-firebase/firestore";
 import auth from "@react-native-firebase/auth";
 
 const HomeTab = ({ navigation }) => {
-  const [services, setServices] = useState([]);
-  const [filteredServices, setFilteredServices] = useState([]);
+  const [bikes, setBikes] = useState([]);
+  const [filteredBikes, setFilteredBikes] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [userName, setUserName] = useState("Người dùng");
 
@@ -34,14 +34,14 @@ const HomeTab = ({ navigation }) => {
   // Lấy dữ liệu từ Firestore
   useEffect(() => {
     const unsubscribe = firestore()
-      .collection("SERVICES")
+      .collection("BIKES")
       .onSnapshot((querySnapshot) => {
         const serviceList = [];
         querySnapshot.forEach((doc) => {
           serviceList.push({ id: doc.id, ...doc.data() });
         });
-        setServices(serviceList);
-        setFilteredServices(serviceList); // Ban đầu hiển thị toàn bộ danh sách
+        setBikes(serviceList);
+        setFilteredBikes(serviceList); // Ban đầu hiển thị toàn bộ danh sách
       }, (error) => {
         console.log("Lỗi lấy dịch vụ:", error.message);
       });
@@ -52,14 +52,14 @@ const HomeTab = ({ navigation }) => {
   // Lọc dữ liệu dựa trên tìm kiếm
   useEffect(() => {
     if (searchQuery.trim() === "") {
-      setFilteredServices(services);
+      setFilteredBikes(bikes);
     } else {
-      const filtered = services.filter((item) =>
+      const filtered = bikes.filter((item) =>
         item.name?.toLowerCase().includes(searchQuery.toLowerCase())
       );
-      setFilteredServices(filtered);
+      setFilteredBikes(filtered);
     }
-  }, [searchQuery, services]);
+  }, [searchQuery, bikes]);
 
   // Danh sách tiện ích
   const utilities = [
@@ -137,7 +137,7 @@ const HomeTab = ({ navigation }) => {
       {/* Danh sách xe đạp */}
       <Text style={styles.sectionTitle}>Danh sách xe đạp</Text>
       <FlatList
-        data={filteredServices}
+        data={filteredBikes}
         renderItem={renderServiceItem}
         keyExtractor={(item) => item.id}
         style={styles.serviceList}

@@ -1,40 +1,100 @@
-import { createMaterialBottomTabNavigator } from "@react-navigation/material-bottom-tabs";
-import RouterService from "../routers/RouterService";
-import Transaction from "./Transaction";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import RouterBike from "../routers/RouterBike";
 import Customers from "./Customer";
+import StationManagement from "./StationManagement";
+import Transaction from "./Transaction";
 import Setting from "./Setting";
+import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 
-const Tab = createMaterialBottomTabNavigator();
+const Tab = createBottomTabNavigator();
 
 const Admin = () => (
-  <Tab.Navigator>
+  <Tab.Navigator
+    screenOptions={{
+      headerShown: false,
+      tabBarShowLabel: false,
+      tabBarStyle: {
+        height: 65,
+        backgroundColor: "#E8F5E9", 
+        borderTopWidth: 0,
+        elevation: 0,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: -3 },
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
+      },
+      tabBarActiveTintColor: "#2E7D32",  
+      tabBarInactiveTintColor: "#888888",   
+    }}
+  >
     <Tab.Screen
-      name="RouterService"
-      component={RouterService}
+      name="Customers"
+      component={Customers}
       options={{
-        title: "Home",
-        tabBarIcon: "home",
+        tabBarIcon: ({ color, focused }) => (
+          <Icon
+            name="account-group"
+            color={color}
+            size={focused ? 34 : 26}
+            style={{ marginTop: 6 }}
+          />
+        ),
+      }}
+    />
+    <Tab.Screen
+      name="StationManagement"
+      component={StationManagement}
+      options={{
+        tabBarIcon: ({ color, focused }) => (
+          <Icon
+            name="map-marker-radius"
+            color={color}
+            size={focused ? 34 : 26}
+            style={{ marginTop: 6 }}
+          />
+        ),
+      }}
+    />
+    <Tab.Screen
+      name="RouterBike"
+      component={RouterBike}
+      options={{
+        tabBarIcon: ({ color, focused }) => (
+          <Icon
+            name="bike"
+            color={color}
+            size={focused ? 34 : 30}
+            style={{ marginTop: 4 }}
+          />
+        ),
       }}
     />
     <Tab.Screen
       name="Transaction"
       component={Transaction}
       options={{
-        tabBarIcon: "cash",
-      }}
-    />
-    <Tab.Screen
-      name="Customers"
-      component={Customers}
-      options={{
-        tabBarIcon: "account",
+        tabBarIcon: ({ color, focused }) => (
+          <Icon
+            name="cash-multiple"
+            color={color}
+            size={focused ? 34 : 26}
+            style={{ marginTop: 6 }}
+          />
+        ),
       }}
     />
     <Tab.Screen
       name="Setting"
       component={Setting}
       options={{
-        tabBarIcon: "cog",
+        tabBarIcon: ({ color, focused }) => (
+          <Icon
+            name="cog"
+            color={color}
+            size={focused ? 34 : 26}
+            style={{ marginTop: 6 }}
+          />
+        ),
       }}
     />
   </Tab.Navigator>
