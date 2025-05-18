@@ -1,6 +1,5 @@
 import { createMaterialBottomTabNavigator } from "@react-navigation/material-bottom-tabs";
 import HomeTab from "./HomeTab";
-import ListBike from "./ListBike";
 import StationTab from "./StationTab";
 import HistoryTab from "./HistoryTab";
 import MoreTab from "./MoreTab";

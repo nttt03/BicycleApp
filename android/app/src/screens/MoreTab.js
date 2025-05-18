@@ -1,25 +1,141 @@
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, TouchableOpacity, Alert, Image } from "react-native";
 import { Text } from "react-native-paper";
+import { useNavigation } from "@react-navigation/native";
+import { useEffect, useState } from "react";
+import { logout, useMyContextController } from "../store";
+import firestore from "@react-native-firebase/firestore";
+import auth from "@react-native-firebase/auth";
 
-const MoreTab = () => (
-  <View style={styles.container}>
-    <Text style={styles.tabTitle}>Mở rộng</Text>
-    <Text>Các tính năng mở rộng sẽ hiển thị tại đây.</Text>
-  </View>
-);
+const MoreTab = () => {
+  const navigation = useNavigation();
+  const [controller, dispatch] = useMyContextController();
+  const { userLogin } = controller;
+
+  const [userName, setUserName] = useState("Người dùng");
+
+  // Lấy tên người dùng từ Firestore
+  useEffect(() => {
+    const user = auth().currentUser;
+    if (user) {
+      const email = user.email;
+      const unsubscribe = firestore()
+        .collection("USERS")
+        .doc(email)
+        .onSnapshot((doc) => {
+          if (doc.exists) {
+            const userData = doc.data();
+            setUserName(userData.fullName || "Người dùng");
+          }
+        }, (error) => {
+          console.log("Lỗi lấy thông tin người dùng:", error.message);
+        });
+
+      return () => unsubscribe();
+    }
+  }, []);
+
+  // Nếu userLogin = null thì quay về màn hình Login
+  useEffect(() => {
+    if (userLogin === null) {
+      navigation.navigate("Login");
+    }
+  }, [userLogin]);
+
+  // Xử lý logout
+  const handleLogout = () => {
+    Alert.alert(
+      "Xác nhận đăng xuất",
+      "Bạn có chắc chắn muốn đăng xuất?",
+      [
+        { text: "Hủy", style: "cancel" },
+        {
+          text: "Đăng xuất",
+          style: "destructive",
+          onPress: () => logout(dispatch),
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.profileBox}>
+        <Image
+          source={require("../assets/icons/user.png")}
+          style={styles.avatar}
+        />
+        <Text style={styles.userName}>{userName}</Text>
+
+        <TouchableOpacity style={styles.optionItem} onPress={() => navigation.navigate("UpdateInfo")}>
+          <Image source={require("../assets/icons/edit.png")} style={styles.optionIcon} />
+          <Text style={styles.optionText}>Cập nhật thông tin</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.optionItem} onPress={() => navigation.navigate("ChangePassword")}>
+          <Image source={require("../assets/icons/key.png")} style={styles.optionIcon} />
+          <Text style={styles.optionText}>Đổi mật khẩu</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.optionItem} onPress={handleLogout}>
+          <Image source={require("../assets/icons/logout.jpg")} style={styles.optionIcon} />
+          <Text style={styles.optionText}>Đăng xuất</Text>
+        </TouchableOpacity>
+      </View>
+      <Image source={require("../assets/img_slide_velogo.png")} style={styles.slideVelogo} />
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: "#E8F5E9",
+    backgroundColor: "white",
+    alignItems: "center",
+    paddingTop: 40,
   },
-  tabTitle: {
-    fontSize: 24,
+  profileBox: {
+    width: "90%",
+    backgroundColor: "#FFF",
+    borderRadius: 12,
+    padding: 20,
+    alignItems: "center",
+    elevation: 3,
+  },
+  avatar: {
+    width: 60,
+    height: 60,
+    marginBottom: 10,
+  },
+  userName: {
+    fontSize: 18,
     fontWeight: "bold",
-    color: "#4CAF50",
+    color: "#00CC99",
     marginBottom: 20,
   },
+  optionItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderColor: "#EEE",
+    width: "100%",
+  },
+  optionIcon: {
+    width: 22,
+    height: 22,
+    marginRight: 12,
+    marginLeft: 4,
+  },
+  optionText: {
+    fontSize: 16,
+    color: "#333",
+  },
+  slideVelogo: {
+    width: 400,
+    height: 110,
+    marginTop: 50
+  }
 });
 
 export default MoreTab;

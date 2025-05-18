@@ -1,5 +1,5 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import ListBike from '../screens/ListBike';
+// import ListBike from '../screens/ListBike';
 import DetailBike from '../screens/DetailBike';
 import RentBike from '../screens/RentBike';
 import { IconButton } from "react-native-paper";
@@ -28,7 +28,7 @@ const RouterUser = () => {
         ),
       }}
     >
-      <Stack.Screen name="ListBike" component={ListBike} />
+      {/* <Stack.Screen name="ListBike" component={ListBike} /> */}
       <Stack.Screen name="DetailBike" component={DetailBike} />
       <Stack.Screen name="RentBike" component={RentBike} />
     </Stack.Navigator>

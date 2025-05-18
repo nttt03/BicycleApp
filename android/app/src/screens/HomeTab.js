@@ -96,8 +96,11 @@ const HomeTab = ({ navigation }) => {
     <View style={styles.container}>
       {/* Thông tin người dùng */}
       <View style={styles.header}>
-        <Text style={styles.greeting}>Xin chào..</Text>
-        <Text style={styles.username}>{userName}</Text>
+        <Image source={require("../assets/icons/user.png")} style={styles.userImage} />
+        <View>
+          <Text style={styles.greeting}>Xin chào,</Text>
+          <Text style={styles.username}>{userName}</Text>
+        </View>
       </View>
 
       {/* Thanh tìm kiếm */}
@@ -144,128 +147,23 @@ const HomeTab = ({ navigation }) => {
   );
 };
 
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     backgroundColor: "white",
-//   },
-//   header: {
-//     padding: 20,
-//     backgroundColor: "#4CAF50",
-//   },
-//   greeting: {
-//     fontSize: 16,
-//     color: "#FFF",
-//   },
-//   username: {
-//     fontSize: 18,
-//     fontWeight: "bold",
-//     color: "#FFF",
-//   },
-//   searchInput: {
-//     backgroundColor: "#FFF",
-//     marginBottom: 10,
-//     marginHorizontal: 20,
-//   },
-//   searchButton: {
-//     backgroundColor: "#4CAF50",
-//     marginBottom: 20,
-//     marginHorizontal: 20,
-//   },
-//   buttonLabel: {
-//     fontSize: 16,
-//     paddingVertical: 5,
-//   },
-//   sectionTitle: {
-//     fontSize: 20,
-//     fontWeight: "bold",
-//     color: "#4CAF50",
-//     marginBottom: 10,
-//     marginHorizontal: 20,
-//   },
-//   utilityContent: {
-//     paddingHorizontal: 20,
-//   },
-//   utilityItem: {
-//     alignItems: "center",
-//     marginRight: 20,
-//   },
-//   utilityList: {
-//     flexGrow: 0,
-//     marginBottom: 20,
-//     backgroundColor: "#ccc",
-//     paddingTop: 20,
-//     paddingBottom: 20,
-//     marginLeft: 20,
-//     marginRight: 20
-//   },
-//   utilityIcon: {
-//     width: 40,
-//     height: 40,
-//     resizeMode: "contain",
-//   },
-//   utilityName: {
-//     fontSize: 14,
-//     marginTop: 5,
-//     textAlign: "center",
-//   },
-//   serviceList: {
-//     flex: 1,
-//     marginBottom: 20,
-//   },
-//   serviceContent: {
-//     paddingHorizontal: 20,
-//     paddingBottom: 20,
-//   },
-//   serviceItem: {
-//     flexDirection: "row",
-//     backgroundColor: "#FFF",
-//     padding: 15,
-//     borderRadius: 5,
-//     marginBottom: 10,
-//     elevation: 2,
-//     alignItems: "center",
-//   },
-//   serviceImage: {
-//     width: 60,
-//     height: 60,
-//     borderRadius: 5,
-//     marginRight: 10,
-//   },
-//   serviceInfo: {
-//     flex: 1,
-//   },
-//   serviceName: {
-//     fontSize: 16,
-//     fontWeight: "bold",
-//     color: "#4CAF50",
-//   },
-//   serviceType: {
-//     fontSize: 14,
-//     color: "#757575",
-//   },
-//   serviceStatus: {
-//     fontSize: 14,
-//     color: "#D32F2F",
-//   },
-//   servicePrice: {
-//     fontSize: 14,
-//     fontWeight: "bold",
-//     color: "#4CAF50",
-//     marginTop: 5,
-//   },
-// });
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F5F5F5",
   },
   header: {
+    flexDirection: "row",
+    alignItems: "center",
     padding: 20,
     backgroundColor: "#4CAF50",
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
+  },
+  userImage: {
+    marginRight: 10,
+    width: 60,
+    height: 60
   },
   greeting: {
     fontSize: 16,
@@ -301,24 +199,21 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     marginHorizontal: 20,
   },
-  utilityList: {
-    marginBottom: 10,
-  },
   utilityContent: {
     paddingHorizontal: 20,
   },
   utilityItem: {
-    backgroundColor: "#FFF",
-    padding: 10,
-    borderRadius: 10,
     alignItems: "center",
-    marginRight: 15,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 1 },
-    shadowRadius: 2,
-    width: 90,
+    marginRight: 20,
+  },
+  utilityList: {
+    flexGrow: 0,
+    backgroundColor: "#DDDDDD",
+    paddingTop: 20,
+    paddingBottom: 20,
+    marginLeft: 20,
+    marginRight: 20,
+    borderRadius: 10
   },
   utilityIcon: {
     width: 40,

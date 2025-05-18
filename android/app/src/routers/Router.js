@@ -7,6 +7,8 @@ import Customer from '../screens/Customer';
 import Admin from '../screens/Admin';
 import Home from '../screens/Home';
 import EditService from '../screens/EditService';
+import ForgotPassword from '../screens/ForgotPassword';
+import UpdateInfo from '../screens/UpdateInfo';
 
 const Stack = createNativeStackNavigator();
 
@@ -19,6 +21,8 @@ const Router = () => {
       <Stack.Screen name="Admin" component={Admin} />
       <Stack.Screen name="Home" component={Home} />
       <Stack.Screen name="EditService" component={EditService} />
+      <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
+      <Stack.Screen name="UpdateInfo" component={UpdateInfo} />
     </Stack.Navigator>
   );
 };
