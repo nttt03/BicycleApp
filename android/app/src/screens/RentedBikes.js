@@ -1,21 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert, Platform } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 
 const RentedBikes = ({ navigation }) => {
   const [rentedBikes, setRentedBikes] = useState([]);
   const user = auth().currentUser;
-  const currentDate = new Date('2025-05-19T10:50:00+07:00'); // Cập nhật thời gian hiện tại: 10:50 AM +07, 19/05/2025
+  const currentDate = new Date('2025-05-19T10:50:00+07:00');
 
-  // Lấy danh sách xe đang thuê từ Firestore
   useEffect(() => {
     if (!user) return;
 
     const unsubscribe = firestore()
       .collection('TRANSACTION')
       .where('userId', '==', user.uid)
-      .where('status', 'in', ['Chờ xác nhận', 'Đã xác nhận']) // Chỉ lấy giao dịch đang thuê
+      .where('status', 'in', ['Đã xác nhận', 'Yêu cầu trả']) // Chỉ lấy xe đang thuê
       .onSnapshot((querySnapshot) => {
         const transactions = [];
         querySnapshot.forEach((doc) => {
@@ -29,17 +28,14 @@ const RentedBikes = ({ navigation }) => {
     return () => unsubscribe();
   }, [user]);
 
-  // Kiểm tra xem giao dịch có thể hủy được không
   const canCancelRent = (item) => {
-    return item.status === 'Chờ xác nhận';
+    return item.status === 'Đã xác nhận';
   };
 
-  // Kiểm tra xem giao dịch có thể yêu cầu trả được không
   const canRequestReturn = (item) => {
     return item.status === 'Đã xác nhận';
   };
 
-  // Xử lý hủy thuê xe
   const handleCancelRent = (transactionId, bikeName) => {
     Alert.alert(
       "Xác nhận hủy thuê xe",
@@ -55,7 +51,7 @@ const RentedBikes = ({ navigation }) => {
                 .collection('TRANSACTION')
                 .doc(transactionId)
                 .update({
-                  status: 'Cancelled',
+                  status: 'Đã hủy',
                   updatedAt: firestore.Timestamp.fromDate(currentDate),
                 });
               Alert.alert("Thành công", "Đã hủy thuê xe thành công!");
@@ -70,7 +66,6 @@ const RentedBikes = ({ navigation }) => {
     );
   };
 
-  // Xử lý yêu cầu trả xe
   const handleRequestReturn = (transactionId, bikeName) => {
     Alert.alert(
       "Xác nhận yêu cầu trả xe",
@@ -101,7 +96,6 @@ const RentedBikes = ({ navigation }) => {
     );
   };
 
-  // Render mỗi giao dịch thuê xe
   const renderRentedBike = ({ item }) => (
     <View style={styles.transactionItem}>
       <View style={styles.transactionInfo}>
@@ -119,21 +113,24 @@ const RentedBikes = ({ navigation }) => {
           Trạng thái: {item.status}
         </Text>
       </View>
-      {canCancelRent(item) ? (
-        <TouchableOpacity
-          style={styles.cancelButton}
-          onPress={() => handleCancelRent(item.id, item.bikeName)}
-        >
-          <Text style={styles.cancelButtonText}>Hủy thuê xe</Text>
-        </TouchableOpacity>
-      ) : canRequestReturn(item) ? (
-        <TouchableOpacity
-          style={styles.returnButton}
-          onPress={() => handleRequestReturn(item.id, item.bikeName)}
-        >
-          <Text style={styles.returnButtonText}>Yêu cầu trả xe</Text>
-        </TouchableOpacity>
-      ) : null}
+
+      {item.status === 'Đã xác nhận' && (
+        <View style={{ gap: 8 }}>
+          <TouchableOpacity
+            style={styles.cancelButton}
+            onPress={() => handleCancelRent(item.id, item.bikeName)}
+          >
+            <Text style={styles.cancelButtonText}>Hủy thuê xe</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.returnButton}
+            onPress={() => handleRequestReturn(item.id, item.bikeName)}
+          >
+            <Text style={styles.returnButtonText}>Yêu cầu trả xe</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 
@@ -185,9 +182,11 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowRadius: 2,
     alignItems: "center",
+    justifyContent: "space-between",
   },
   transactionInfo: {
     flex: 1,
+    marginRight: 10,
   },
   bikeName: {
     fontSize: 18,
@@ -211,14 +210,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   returnButton: {
-    backgroundColor: "#FF9800", // Màu cam cho nút yêu cầu trả xe
+    backgroundColor: "#FF9800",
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 8,
-  },
-  disabledButton: {
-    backgroundColor: "#B0BEC5",
-    opacity: 0.6,
   },
   cancelButtonText: {
     color: "#FFF",

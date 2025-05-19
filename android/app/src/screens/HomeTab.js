@@ -34,23 +34,24 @@ const HomeTab = ({ navigation }) => {
 }, []);
 
 
-  // Lấy dữ liệu từ Firestore
   useEffect(() => {
-    const unsubscribe = firestore()
-      .collection("BIKES")
-      .onSnapshot((querySnapshot) => {
-        const serviceList = [];
-        querySnapshot.forEach((doc) => {
-          serviceList.push({ id: doc.id, ...doc.data() });
-        });
-        setBikes(serviceList);
-        setFilteredBikes(serviceList); // Ban đầu hiển thị toàn bộ danh sách
-      }, (error) => {
-        console.log("Lỗi lấy dịch vụ:", error.message);
+  const unsubscribe = firestore()
+    .collection("BIKES")
+    .where("status", "==", "Có sẵn")
+    .onSnapshot((querySnapshot) => {
+      const serviceList = [];
+      querySnapshot.forEach((doc) => {
+        serviceList.push({ id: doc.id, ...doc.data() });
       });
+      setBikes(serviceList);
+      setFilteredBikes(serviceList);
+    }, (error) => {
+      console.log("Lỗi lấy dịch vụ:", error.message);
+    });
 
-    return () => unsubscribe();
-  }, []);
+  return () => unsubscribe();
+}, []);
+
 
   // Lọc dữ liệu dựa trên tìm kiếm
   useEffect(() => {

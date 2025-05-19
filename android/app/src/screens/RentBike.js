@@ -37,46 +37,98 @@ const RentBike = ({ route, navigation }) => {
     setReturnDate(currentDate);
   };
 
-  const handleRent = async () => {
-    if (!user) {
-      Alert.alert("Lỗi", "Vui lòng đăng nhập để thuê xe.");
-      return;
-    }
+//   const handleRent = async () => {
+//     if (!user) {
+//       Alert.alert("Lỗi", "Vui lòng đăng nhập để thuê xe.");
+//       return;
+//     }
 
-    Alert.alert(
-      "Xác nhận thuê xe",
-      `Bạn có chắc muốn thuê xe này không? Tổng chi phí: ${totalPrice.toLocaleString("vi-VN")} VNĐ`,
-      [
-        { text: "Không", style: "cancel" },
-        {
-          text: "Có",
-          onPress: async () => {
-            try {
-              await firestore()
-                .collection('TRANSACTION')
-                .add({
-                  userId: user.uid,
-                  userEmail: user.email,
-                  bikeId: bike.id,
-                  bikeName: bike.name,
-                  rentDate: firestore.Timestamp.fromDate(rentDate),
-                  returnDate: firestore.Timestamp.fromDate(returnDate),
-                  totalPrice: totalPrice,
-                  status: 'Chờ xác nhận',
-                  createdAt: firestore.Timestamp.now(),
-                });
-              Alert.alert("Thành công", "Đã đặt thuê xe thành công!");
-               navigation.navigate("RentedBikes");
-            } catch (error) {
-              console.log("Lỗi lưu giao dịch:", error.message);
-              Alert.alert("Lỗi", "Không thể lưu giao dịch. Vui lòng thử lại.");
-            }
-          },
+//     Alert.alert(
+//       "Xác nhận thuê xe",
+//       `Bạn có chắc muốn thuê xe này không? Tổng chi phí: ${totalPrice.toLocaleString("vi-VN")} VNĐ`,
+//       [
+//         { text: "Không", style: "cancel" },
+//         {
+//           text: "Có",
+//           onPress: async () => {
+//             try {
+//               await firestore()
+//                 .collection('TRANSACTION')
+//                 .add({
+//                   userId: user.uid,
+//                   userEmail: user.email,
+//                   bikeId: bike.id,
+//                   bikeName: bike.name,
+//                   rentDate: firestore.Timestamp.fromDate(rentDate),
+//                   returnDate: firestore.Timestamp.fromDate(returnDate),
+//                   totalPrice: totalPrice,
+//                   status: 'Đã xác nhận',
+//                   createdAt: firestore.Timestamp.now(),
+//                 });
+//               Alert.alert("Thành công", "Đã đặt thuê xe thành công!");
+//                navigation.navigate("RentedBikes");
+//             } catch (error) {
+//               console.log("Lỗi lưu giao dịch:", error.message);
+//               Alert.alert("Lỗi", "Không thể lưu giao dịch. Vui lòng thử lại.");
+//             }
+//           },
+//         },
+//       ],
+//       { cancelable: true }
+//     );
+//   };
+
+  const handleRent = async () => {
+  if (!user) {
+    Alert.alert("Lỗi", "Vui lòng đăng nhập để thuê xe.");
+    return;
+  }
+
+  Alert.alert(
+    "Xác nhận thuê xe",
+    `Bạn có chắc muốn thuê xe này không? Tổng chi phí: ${totalPrice.toLocaleString("vi-VN")} VNĐ`,
+    [
+      { text: "Không", style: "cancel" },
+      {
+        text: "Có",
+        onPress: async () => {
+          try {
+            // 1. Ghi giao dịch mới
+            await firestore()
+              .collection('TRANSACTION')
+              .add({
+                userId: user.uid,
+                userEmail: user.email,
+                bikeId: bike.id,
+                bikeName: bike.name,
+                rentDate: firestore.Timestamp.fromDate(rentDate),
+                returnDate: firestore.Timestamp.fromDate(returnDate),
+                totalPrice: totalPrice,
+                status: 'Đã xác nhận',
+                createdAt: firestore.Timestamp.now(),
+              });
+
+            // 2. Cập nhật status của xe thành "Đang cho thuê"
+            await firestore()
+              .collection('BIKES')
+              .doc(bike.id)
+              .update({
+                status: 'Đang cho thuê',
+              });
+
+            Alert.alert("Thành công", "Đã đặt thuê xe thành công!");
+            navigation.navigate("RentedBikes");
+          } catch (error) {
+            console.log("Lỗi lưu giao dịch:", error.message);
+            Alert.alert("Lỗi", "Không thể lưu giao dịch. Vui lòng thử lại.");
+          }
         },
-      ],
-      { cancelable: true }
-    );
-  };
+      },
+    ],
+    { cancelable: true }
+  );
+};
+
 
   return (
     <View style={styles.container}>
