@@ -1,4 +1,4 @@
-import { Image, View, FlatList, StyleSheet } from "react-native";
+import { Image, View, FlatList, StyleSheet, TouchableOpacity } from "react-native";
 import { TextInput, Button, Text } from "react-native-paper";
 import { useEffect, useState } from "react";
 import firestore from "@react-native-firebase/firestore";
@@ -79,7 +79,10 @@ const HomeTab = ({ navigation }) => {
 
   // Render mục xe đạp
   const renderServiceItem = ({ item }) => (
-    <View style={styles.serviceItem}>
+    <TouchableOpacity
+      style={styles.serviceItem}
+      onPress={() => navigation.navigate("RentBike", { bike: item })}
+    >
       <Image source={require("../assets/icons/img_bike.png")} style={styles.serviceImage} />
       <View style={styles.serviceInfo}>
         <Text style={styles.serviceName}>{item.name || "Tên xe không xác định"}</Text>
@@ -89,7 +92,7 @@ const HomeTab = ({ navigation }) => {
           {item.price ? `${item.price.toLocaleString("vi-VN")} VNĐ` : "Giá không xác định"}
         </Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   return (
@@ -163,7 +166,7 @@ const styles = StyleSheet.create({
   userImage: {
     marginRight: 10,
     width: 60,
-    height: 60
+    height: 60,
   },
   greeting: {
     fontSize: 16,
@@ -213,7 +216,7 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     marginLeft: 20,
     marginRight: 20,
-    borderRadius: 10
+    borderRadius: 10,
   },
   utilityIcon: {
     width: 40,

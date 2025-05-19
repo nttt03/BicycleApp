@@ -1,6 +1,7 @@
 import { createMaterialBottomTabNavigator } from "@react-navigation/material-bottom-tabs";
-import HomeTab from "./HomeTab";
+import RouterUser from "../routers/RouterUser";
 import StationTab from "./StationTab";
+import RentedBikes from "./RentedBikes";
 import HistoryTab from "./HistoryTab";
 import MoreTab from "./MoreTab";
 
@@ -13,8 +14,8 @@ const Home = () => (
     barStyle={{ backgroundColor: "#E8F5E9" }}
   >
     <Tab.Screen
-      name="HomeTab"
-      component={HomeTab}
+      name="RouterUser"
+      component={RouterUser}
       options={{
         title: "Trang chủ",
         tabBarIcon: "home",
@@ -26,6 +27,14 @@ const Home = () => (
       options={{
         title: "Trạm xe",
         tabBarIcon: "map-marker",
+      }}
+    />
+    <Tab.Screen
+      name="RentedBikes"
+      component={RentedBikes}
+      options={{
+        title: "Xe thuê",
+        tabBarIcon: "bike",
       }}
     />
     <Tab.Screen
