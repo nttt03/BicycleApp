@@ -12,24 +12,27 @@ const HomeTab = ({ navigation }) => {
 
   // Lấy thông tin người dùng
   useEffect(() => {
-    const user = auth().currentUser;
-    if (user) {
-      const email = user.email;
-      const unsubscribeUser = firestore()
-        .collection("USERS")
-        .doc(email)
-        .onSnapshot((doc) => {
-          if (doc.exists) {
-            const userData = doc.data();
-            setUserName(userData.fullName || "Người dùng");
-          }
-        }, (error) => {
-          console.log("Lỗi lấy thông tin người dùng:", error.message);
-        });
+  const user = auth().currentUser;
+  if (user) {
+    const email = user.email;
+    const unsubscribeUser = firestore()
+      .collection("USERS")
+      .where("email", "==", email)
+      .onSnapshot((querySnapshot) => {
+        if (!querySnapshot.empty) {
+          const userData = querySnapshot.docs[0].data();
+          setUserName(userData.fullName || "Người dùng");
+        } else {
+          console.log("Không tìm thấy thông tin người dùng với email:", email);
+        }
+      }, (error) => {
+        console.log("Lỗi khi lấy thông tin người dùng:", error.message);
+      });
 
-      return () => unsubscribeUser();
-    }
-  }, []);
+    return () => unsubscribeUser();
+  }
+}, []);
+
 
   // Lấy dữ liệu từ Firestore
   useEffect(() => {

@@ -20,23 +20,45 @@ const Register = ({ navigation }) => {
   const hasErrorPasswordConfirm = () => passwordConfirm !== password;
 
   const handleCreateAccount = () => {
+    if (
+      hasErrorFullName() ||
+      hasErrorEmail() ||
+      hasErrorPassword() ||
+      hasErrorPasswordConfirm()
+    ) {
+      Alert.alert("❌ Vui lòng kiểm tra lại thông tin");
+      return;
+    }
+
     auth()
       .createUserWithEmailAndPassword(email, password)
-      .then(() => {
-        const users = firestore().collection("USERS").doc(email);
-        users
+      .then((userCredential) => {
+        const { uid, email } = userCredential.user;
+        firestore()
+          .collection("USERS")
+          .doc(uid)
           .set({
+            uid,
             fullName,
             email,
-            password,
             address,
             phone,
             role: "customer",
+            createdAt: firestore.FieldValue.serverTimestamp(),
           })
-          .then(() => navigation.navigate("Login"))
-          .catch((e) => Alert.alert("❌ Tài khoản đã tồn tại"));
+          .then(() => {
+            Alert.alert("✅ Đăng ký thành công");
+            navigation.navigate("Login");
+          })
+          .catch((error) => {
+            console.error("Lỗi khi lưu dữ liệu:", error);
+            Alert.alert("❌ Lỗi khi lưu thông tin người dùng");
+          });
       })
-      .catch((e) => Alert.alert("❌ Tài khoản đã tồn tại"));
+      .catch((error) => {
+        console.error("Lỗi đăng ký:", error);
+        Alert.alert("❌ Tài khoản đã tồn tại hoặc thông tin không hợp lệ");
+      });
   };
 
   return (
@@ -63,11 +85,7 @@ const Register = ({ navigation }) => {
         Vui lòng nhập họ và tên đầy đủ
       </HelperText>
 
-      <TextInput
-        label={"Email"}
-        value={email}
-        onChangeText={setEmail}
-      />
+      <TextInput label={"Email"} value={email} onChangeText={setEmail} />
       <HelperText type="error" visible={hasErrorEmail()}>
         Email không hợp lệ
       </HelperText>
