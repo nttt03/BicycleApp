@@ -120,14 +120,6 @@ const HomeTab = ({ navigation }) => {
         theme={{ colors: { primary: "#4CAF50" } }}
         right={<TextInput.Icon icon="magnify" />}
       />
-      <Button
-        mode="contained"
-        onPress={() => {}}
-        style={styles.searchButton}
-        labelStyle={styles.buttonLabel}
-      >
-        Tìm kiếm
-      </Button>
 
       {/* Phần tiện ích */}
       <Text style={styles.sectionTitle}>Tiện ích</Text>
@@ -187,16 +179,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginHorizontal: 20,
     borderRadius: 10,
-  },
-  searchButton: {
-    backgroundColor: "#4CAF50",
-    marginTop: 10,
-    marginHorizontal: 20,
-    borderRadius: 10,
-    paddingVertical: 6,
-  },
-  buttonLabel: {
-    fontSize: 16,
   },
   sectionTitle: {
     fontSize: 20,

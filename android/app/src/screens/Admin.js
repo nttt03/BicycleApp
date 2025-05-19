@@ -1,6 +1,6 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import RouterBike from "../routers/RouterBike";
-import Customers from "./Customer";
+import RouterCustomer from "../routers/RouterCustomer";
 import StationManagement from "./StationManagement";
 import Transaction from "./Transaction";
 import Setting from "./Setting";
@@ -28,8 +28,8 @@ const Admin = () => (
     }}
   >
     <Tab.Screen
-      name="Customers"
-      component={Customers}
+      name="RouterCustomer"
+      component={RouterCustomer}
       options={{
         tabBarIcon: ({ color, focused }) => (
           <Icon
