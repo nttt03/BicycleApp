@@ -13,6 +13,7 @@ import firestore from "@react-native-firebase/firestore";
 import auth from "@react-native-firebase/auth";
 import { useNavigation } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/Ionicons";
+import { Picker } from "@react-native-picker/picker";
 
 const UpdateInfo = () => {
   const navigation = useNavigation();
@@ -21,6 +22,7 @@ const UpdateInfo = () => {
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
+  const [gender, setGender] = useState("None"); // Giá trị mặc định là "None"
 
   useEffect(() => {
     const fetchData = async () => {
@@ -28,12 +30,15 @@ const UpdateInfo = () => {
       if (user) {
         setEmail(user.email);
         try {
-          const doc = await firestore().collection("USERS").doc(user.email).get();
+          const doc = await firestore().collection("USERS").doc(user.uid).get();
           if (doc.exists) {
             const data = doc.data();
             setFullName(data.fullName || "");
             setAddress(data.address || "");
             setPhone(data.phone || "");
+            setGender(data.gender || "None"); // Lấy gender từ Firestore, nếu không có thì là "None"
+          } else {
+            console.log("Tài liệu không tồn tại cho UID:", user.uid);
           }
         } catch (error) {
           console.log("Lỗi lấy dữ liệu:", error.message);
@@ -48,10 +53,12 @@ const UpdateInfo = () => {
     const user = auth().currentUser;
     if (user) {
       try {
-        await firestore().collection("USERS").doc(user.email).update({
+        await firestore().collection("USERS").doc(user.uid).update({
           fullName,
           address,
           phone,
+          gender,
+          updatedAt: firestore.Timestamp.now(),
         });
         Alert.alert("Thành công", "Cập nhật thông tin thành công!");
       } catch (error) {
@@ -104,6 +111,19 @@ const UpdateInfo = () => {
         placeholder="Nhập số điện thoại"
       />
 
+      <Text style={styles.label}>Giới tính</Text>
+      <View style={[styles.input, styles.pickerContainer]}>
+        <Picker
+          selectedValue={gender}
+          onValueChange={(itemValue) => setGender(itemValue)}
+          style={styles.picker}
+        >
+          <Picker.Item label="None" value="None" />
+          <Picker.Item label="Nam" value="Nam" />
+          <Picker.Item label="Nữ" value="Nữ" />
+        </Picker>
+      </View>
+
       <Button title="Lưu thay đổi" onPress={handleUpdate} />
     </ScrollView>
   );
@@ -144,6 +164,13 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
+  },
+  pickerContainer: {
+    padding: 0, // Loại bỏ padding để Picker hiển thị tốt hơn
+  },
+  picker: {
+    height: 50,
+    width: "100%",
   },
 });
 

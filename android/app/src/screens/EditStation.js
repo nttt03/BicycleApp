@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -27,12 +27,54 @@ const EditStation = ({ route, navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
   const [modalIcon, setModalIcon] = useState("");
+  const [debouncedLatLng, setDebouncedLatLng] = useState({ lat: null, lng: null });
+  const debounceTimer = useRef(null);
+
 
   const handleMapPress = (e) => {
     const { latitude, longitude } = e.nativeEvent.coordinate;
     setLatitude(latitude);
     setLongitude(longitude);
+
+    if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+    }
+
+    debounceTimer.current = setTimeout(() => {
+        setDebouncedLatLng({ lat: latitude, lng: longitude });
+    }, 500); // Debounce 500ms
   };
+
+  useEffect(() => {
+    const fetchAddress = async () => {
+        const { lat, lng } = debouncedLatLng;
+        if (lat && lng) {
+        try {
+            const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`;
+
+            const response = await fetch(url, {
+            headers: {
+                "User-Agent": "ReactNativeApp/1.0",
+                "Accept-Language": "vi",
+            },
+            });
+
+            const data = await response.json();
+
+            if (data && data.display_name) {
+            setAddress(data.display_name);
+            } else {
+            setAddress("Không thể xác định địa chỉ");
+            }
+        } catch (error) {
+            console.error("Lỗi lấy địa chỉ:", error);
+            setAddress("Lỗi khi lấy địa chỉ");
+        }
+        }
+    };
+
+    fetchAddress();
+    }, [debouncedLatLng]);
 
   const handleZoom = (zoomIn = true) => {
     setRegionDelta((prev) => (zoomIn ? prev / 1.5 : prev * 1.5));
@@ -115,14 +157,13 @@ const EditStation = ({ route, navigation }) => {
         </View>
       </View>
 
-      <Text style={styles.label}>Địa chỉ (tự nhập)</Text>
+      <Text style={styles.label}>Địa chỉ</Text>
       <TextInput
         style={styles.input}
         placeholder="Nhập địa chỉ chính xác"
         value={address}
         onChangeText={setAddress}
       />
-      <Text style={styles.note}>⚠️ Đảm bảo địa chỉ nhập phù hợp với vị trí đã chọn.</Text>
 
       <Text style={styles.label}>Tổng số xe</Text>
       <TextInput

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -26,11 +26,54 @@ const AddNewStation = ({ navigation }) => {
   const [modalMessage, setModalMessage] = useState("");
   const [modalIcon, setModalIcon] = useState("");
 
+  // Debounce
+  const [debouncedLatLng, setDebouncedLatLng] = useState({ lat: null, lng: null });
+  const debounceTimer = useRef(null);
+
   const handleMapPress = (e) => {
     const { latitude, longitude } = e.nativeEvent.coordinate;
     setLatitude(latitude);
     setLongitude(longitude);
+
+    // Debounce logic
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+    debounceTimer.current = setTimeout(() => {
+      setDebouncedLatLng({ lat: latitude, lng: longitude });
+    }, 500);
   };
+
+  // Gọi Nominatim khi tọa độ đã debounce xong
+  useEffect(() => {
+    const fetchAddress = async () => {
+      const { lat, lng } = debouncedLatLng;
+      if (lat && lng) {
+        try {
+          const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`;
+          const response = await fetch(url, {
+            headers: {
+              "User-Agent": "ReactNativeApp/1.0",
+              "Accept-Language": "vi",
+            },
+          });
+
+          const data = await response.json();
+
+          if (data && data.display_name) {
+            setAddress(data.display_name);
+          } else {
+            setAddress("Không thể xác định địa chỉ");
+          }
+        } catch (error) {
+          console.error("Lỗi lấy địa chỉ:", error);
+          setAddress("Lỗi khi lấy địa chỉ");
+        }
+      }
+    };
+
+    fetchAddress();
+  }, [debouncedLatLng]);
 
   const handleZoom = (zoomIn = true) => {
     setRegionDelta((prev) => (zoomIn ? prev / 1.5 : prev * 1.5));
@@ -80,7 +123,6 @@ const AddNewStation = ({ navigation }) => {
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: "#f5f5f5", padding: 16 }}>
-
       <Text style={styles.label}>Tên trạm</Text>
       <TextInput
         style={styles.input}
@@ -114,14 +156,13 @@ const AddNewStation = ({ navigation }) => {
         </View>
       </View>
 
-      <Text style={styles.label}>Địa chỉ (tự nhập)</Text>
+      <Text style={styles.label}>Địa chỉ</Text>
       <TextInput
         style={styles.input}
         placeholder="Nhập địa chỉ chính xác"
         value={address}
         onChangeText={setAddress}
       />
-      <Text style={styles.note}>⚠️ Đảm bảo địa chỉ nhập phù hợp với vị trí đã chọn.</Text>
 
       <Text style={styles.label}>Tổng số xe</Text>
       <TextInput
@@ -154,7 +195,6 @@ const AddNewStation = ({ navigation }) => {
         <Text style={styles.saveButtonText}>Lưu trạm</Text>
       </TouchableOpacity>
 
-      {/* Modal Thông báo */}
       <Modal
         transparent
         visible={modalVisible}
@@ -181,13 +221,6 @@ const AddNewStation = ({ navigation }) => {
 export default AddNewStation;
 
 const styles = StyleSheet.create({
-  title: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginBottom: 16,
-    color: "#2E7D32",
-    textAlign: "center",
-  },
   label: {
     fontSize: 16,
     fontWeight: "600",
