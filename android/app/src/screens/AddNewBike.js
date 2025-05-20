@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -9,6 +9,7 @@ import {
   Platform,
   ScrollView,
   Modal,
+  ActivityIndicator,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import firestore from "@react-native-firebase/firestore";
@@ -31,13 +32,39 @@ const AddNewBike = ({ navigation }) => {
   const [type, setType] = useState(bikeTypes[0]);
   const [price, setPrice] = useState("");
   const [status, setStatus] = useState(bikeStatuses[0]);
+  const [stationId, setStationId] = useState("");
+
+  const [stations, setStations] = useState([]);
+  const [loadingStations, setLoadingStations] = useState(true);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
   const [modalIcon, setModalIcon] = useState("✅");
 
+  // Lấy danh sách các trạm từ Firestore
+  useEffect(() => {
+    const fetchStations = async () => {
+      try {
+        const snapshot = await firestore().collection("STATIONS").get();
+        const stationList = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setStations(stationList);
+        if (stationList.length > 0) {
+          setStationId(stationList[0].id); // chọn mặc định
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy trạm:", error);
+      } finally {
+        setLoadingStations(false);
+      }
+    };
+    fetchStations();
+  }, []);
+
   const handleAddBike = async () => {
-    if (!name || !type || !price || !status) {
+    if (!name || !type || !price || !status || !stationId) {
       setModalIcon("❌");
       setModalMessage("Vui lòng điền đầy đủ thông tin.");
       setModalVisible(true);
@@ -52,6 +79,7 @@ const AddNewBike = ({ navigation }) => {
         type,
         price: Number(price),
         status,
+        stationId,
         createdAt: timestamp,
         updatedAt: timestamp,
       });
@@ -72,7 +100,7 @@ const AddNewBike = ({ navigation }) => {
       behavior={Platform.OS === "ios" ? "padding" : null}
     >
       <ScrollView contentContainerStyle={styles.container}>
-
+        {/* Tên xe */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Tên xe</Text>
           <TextInput
@@ -83,6 +111,7 @@ const AddNewBike = ({ navigation }) => {
           />
         </View>
 
+        {/* Loại xe */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Loại xe</Text>
           <View style={styles.pickerWrapper}>
@@ -98,6 +127,7 @@ const AddNewBike = ({ navigation }) => {
           </View>
         </View>
 
+        {/* Giá thuê */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Giá thuê (VNĐ/Giờ)</Text>
           <TextInput
@@ -109,6 +139,7 @@ const AddNewBike = ({ navigation }) => {
           />
         </View>
 
+        {/* Trạng thái */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Trạng thái</Text>
           <View style={styles.pickerWrapper}>
@@ -124,12 +155,37 @@ const AddNewBike = ({ navigation }) => {
           </View>
         </View>
 
+        {/* Trạm */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Thuộc trạm</Text>
+          {loadingStations ? (
+            <ActivityIndicator size="small" color="#388E3C" />
+          ) : (
+            <View style={styles.pickerWrapper}>
+              <Picker
+                selectedValue={stationId}
+                onValueChange={(value) => setStationId(value)}
+                style={styles.picker}
+              >
+                {stations.map((station) => (
+                  <Picker.Item
+                    key={station.id}
+                    label={station.stationName || "Trạm không tên"}
+                    value={station.id}
+                  />
+                ))}
+              </Picker>
+            </View>
+          )}
+        </View>
+
+        {/* Nút thêm */}
         <TouchableOpacity style={styles.button} onPress={handleAddBike}>
           <Text style={styles.buttonText}>Thêm xe</Text>
         </TouchableOpacity>
       </ScrollView>
 
-      {/* Modal thông báo hiện đại */}
+      {/* Modal thông báo */}
       <Modal transparent visible={modalVisible} animationType="fade">
         <View style={styles.modalOverlay}>
           <View
@@ -218,7 +274,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 
-  // Modal styles
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.3)",

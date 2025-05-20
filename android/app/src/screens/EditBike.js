@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -9,6 +9,7 @@ import {
   Platform,
   ScrollView,
   Modal,
+  ActivityIndicator,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import firestore from "@react-native-firebase/firestore";
@@ -33,10 +34,34 @@ const EditBike = ({ route, navigation }) => {
   const [type, setType] = useState(bike.type);
   const [price, setPrice] = useState(String(bike.price));
   const [status, setStatus] = useState(bike.status);
+  const [stationId, setStationId] = useState(bike.stationId || "");
+
+  const [stations, setStations] = useState([]);
+  const [loadingStations, setLoadingStations] = useState(true);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
   const [modalSuccess, setModalSuccess] = useState(false);
+
+  useEffect(() => {
+    const fetchStations = async () => {
+      try {
+        const snapshot = await firestore().collection("STATIONS").get();
+        const list = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          name: doc.data().stationName,
+        }));
+        setStations(list);
+        setLoadingStations(false);
+      } catch (error) {
+        console.error("Lỗi khi tải trạm:", error);
+        setStations([]);
+        setLoadingStations(false);
+      }
+    };
+
+    fetchStations();
+  }, []);
 
   const openModal = (message, success = false) => {
     setModalMessage(message);
@@ -52,7 +77,7 @@ const EditBike = ({ route, navigation }) => {
   };
 
   const handleUpdateBike = async () => {
-    if (!name || !type || !price || !status) {
+    if (!name || !type || !price || !status || !stationId) {
       openModal("Vui lòng điền đầy đủ thông tin", false);
       return;
     }
@@ -63,6 +88,7 @@ const EditBike = ({ route, navigation }) => {
         type,
         price: Number(price),
         status,
+        stationId,
         updatedAt: firestore.FieldValue.serverTimestamp(),
       });
       openModal("Đã cập nhật thông tin xe thành công", true);
@@ -90,11 +116,7 @@ const EditBike = ({ route, navigation }) => {
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Loại xe</Text>
           <View style={styles.pickerWrapper}>
-            <Picker
-              selectedValue={type}
-              onValueChange={(value) => setType(value)}
-              style={styles.picker}
-            >
+            <Picker selectedValue={type} onValueChange={setType} style={styles.picker}>
               {bikeTypes.map((type) => (
                 <Picker.Item key={type} label={type} value={type} />
               ))}
@@ -116,15 +138,31 @@ const EditBike = ({ route, navigation }) => {
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Trạng thái</Text>
           <View style={styles.pickerWrapper}>
-            <Picker
-              selectedValue={status}
-              onValueChange={(value) => setStatus(value)}
-              style={styles.picker}
-            >
+            <Picker selectedValue={status} onValueChange={setStatus} style={styles.picker}>
               {bikeStatuses.map((s) => (
                 <Picker.Item key={s} label={s} value={s} />
               ))}
             </Picker>
+          </View>
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Trạm xe</Text>
+          <View style={styles.pickerWrapper}>
+            {loadingStations ? (
+              <ActivityIndicator size="small" color="#388E3C" style={{ padding: 10 }} />
+            ) : (
+              <Picker
+                selectedValue={stationId}
+                onValueChange={(value) => setStationId(value)}
+                style={styles.picker}
+              >
+                <Picker.Item label="-- Chọn trạm --" value="" />
+                {stations.map((station) => (
+                  <Picker.Item key={station.id} label={station.name} value={station.id} />
+                ))}
+              </Picker>
+            )}
           </View>
         </View>
 
@@ -133,12 +171,8 @@ const EditBike = ({ route, navigation }) => {
         </TouchableOpacity>
       </ScrollView>
 
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={closeModal}
-      >
+      {/* Modal */}
+      <Modal animationType="fade" transparent visible={modalVisible} onRequestClose={closeModal}>
         <View style={styles.modalOverlay}>
           <View
             style={[
