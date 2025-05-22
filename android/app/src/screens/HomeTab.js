@@ -9,30 +9,31 @@ const HomeTab = ({ navigation }) => {
   const [filteredBikes, setFilteredBikes] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [userName, setUserName] = useState("Người dùng");
+  const [gender, setGender] = useState("Nam");
 
   // Lấy thông tin người dùng
   useEffect(() => {
-  const user = auth().currentUser;
-  if (user) {
-    const email = user.email;
-    const unsubscribeUser = firestore()
-      .collection("USERS")
-      .where("email", "==", email)
-      .onSnapshot((querySnapshot) => {
-        if (!querySnapshot.empty) {
-          const userData = querySnapshot.docs[0].data();
-          setUserName(userData.fullName || "Người dùng");
-        } else {
-          console.log("Không tìm thấy thông tin người dùng với email:", email);
-        }
-      }, (error) => {
-        console.log("Lỗi khi lấy thông tin người dùng:", error.message);
-      });
+    const user = auth().currentUser;
+    if (user) {
+      const email = user.email;
+      const unsubscribeUser = firestore()
+        .collection("USERS")
+        .where("email", "==", email)
+        .onSnapshot((querySnapshot) => {
+          if (!querySnapshot.empty) {
+            const userData = querySnapshot.docs[0].data();
+            setUserName(userData.fullName || "Người dùng");
+            setGender(userData.gender || "nam"); // <-- Lưu giới tính
+          } else {
+            console.log("Không tìm thấy thông tin người dùng với email:", email);
+          }
+        }, (error) => {
+          console.log("Lỗi khi lấy thông tin người dùng:", error.message);
+        });
 
-    return () => unsubscribeUser();
-  }
-}, []);
-
+      return () => unsubscribeUser();
+    }
+  }, []);
 
   useEffect(() => {
   const unsubscribe = firestore()
@@ -103,7 +104,15 @@ const HomeTab = ({ navigation }) => {
     <View style={styles.container}>
       {/* Thông tin người dùng */}
       <View style={styles.header}>
-        <Image source={require("../assets/icons/user.png")} style={styles.userImage} />
+        <Image
+          source={
+            gender === "Nữ"
+              ? require("../assets/avatar_female.png")
+              : require("../assets/avatar_male.png")
+          }
+          style={styles.userImage}
+        />
+
         <View>
           <Text style={styles.greeting}>Xin chào,</Text>
           <Text style={styles.username}>{userName}</Text>
@@ -163,6 +172,9 @@ const styles = StyleSheet.create({
     marginRight: 10,
     width: 60,
     height: 60,
+    borderRadius: 30, 
+    borderWidth: 2,
+    borderColor: "#FFF",
   },
   greeting: {
     fontSize: 16,

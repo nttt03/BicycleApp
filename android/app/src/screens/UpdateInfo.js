@@ -22,8 +22,7 @@ const UpdateInfo = () => {
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
-  const [gender, setGender] = useState("None"); // Giá trị mặc định là "None"
-
+  const [gender, setGender] = useState("None");
   useEffect(() => {
     const fetchData = async () => {
       const user = auth().currentUser;

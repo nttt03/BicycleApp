@@ -1,14 +1,12 @@
 import React from 'react';
-// import { createStackNavigator } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Login from '../screens/Login';
 import Register from '../screens/Register';
-import Customer from '../screens/Customer';
 import Admin from '../screens/Admin';
 import Home from '../screens/Home';
-import EditService from '../screens/EditService';
 import ForgotPassword from '../screens/ForgotPassword';
 import UpdateInfo from '../screens/UpdateInfo';
+import ChangePassword from '../screens/ChangePassword';
 
 const Stack = createNativeStackNavigator();
 
@@ -17,12 +15,11 @@ const Router = () => {
     <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Login" component={Login} />
       <Stack.Screen name="Register" component={Register} />
-      <Stack.Screen name="Customer" component={Customer} />
       <Stack.Screen name="Admin" component={Admin} />
       <Stack.Screen name="Home" component={Home} />
-      <Stack.Screen name="EditService" component={EditService} />
       <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
       <Stack.Screen name="UpdateInfo" component={UpdateInfo} />
+      <Stack.Screen name="ChangePassword" component={ChangePassword} />
     </Stack.Navigator>
   );
 };

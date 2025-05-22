@@ -7,14 +7,14 @@ import auth from '@react-native-firebase/auth';
 const HistoryTab = () => {
   const [historyBikes, setHistoryBikes] = useState([]);
   const user = auth().currentUser;
-  const currentDate = new Date('2025-05-19T11:03:00+07:00'); // Cập nhật thời gian hiện tại: 11:03 AM +07, 19/05/2025
+  const currentDate = new Date('2025-05-19T11:03:00+07:00');
 
   // Lấy danh sách lịch sử thuê xe từ Firestore
   useEffect(() => {
     if (!user) return;
 
     const unsubscribe = firestore()
-      .collection('TRANSACTION')
+      .collection('TRANSACTIONS')
       .where('userId', '==', user.uid)
       .where('status', '==', 'Hoàn thành') // Chỉ lấy giao dịch đã hoàn thành
       .onSnapshot((querySnapshot) => {
@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 14,
-    color: "#0288D1", // Màu xanh dương cho trạng thái hoàn thành
+    color: "#0288D1",
     marginTop: 4,
   },
   emptyText: {

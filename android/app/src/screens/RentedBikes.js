@@ -1,9 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  Linking,
+} from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { Linking } from 'react-native';
 
 const RentedBikes = ({ navigation }) => {
   const [rentedBikes, setRentedBikes] = useState([]);
@@ -12,68 +19,43 @@ const RentedBikes = ({ navigation }) => {
 
   const openMapWithAddress = (address) => {
     const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
-    Linking.openURL(url).catch(err => console.error("Không thể mở bản đồ:", err));
+    Linking.openURL(url).catch((err) => console.error('Không thể mở bản đồ:', err));
   };
-
 
   useEffect(() => {
     if (!user) return;
 
     const unsubscribe = firestore()
-      .collection('TRANSACTION')
+      .collection('TRANSACTIONS')
       .where('userId', '==', user.uid)
       .where('status', 'in', ['Đã xác nhận', 'Yêu cầu trả'])
       .onSnapshot(async (querySnapshot) => {
         const transactions = [];
-        console.log('Số giao dịch tìm thấy:', querySnapshot.docs.length);
+
         for (const doc of querySnapshot.docs) {
           const data = doc.data();
-          console.log('Transaction data:', data);
-          console.log('StationId từ giao dịch:', data.stationId);
+          let stationData = { stationName: 'Không rõ', address: 'Không rõ' };
+
           if (data.stationId) {
             try {
-              const stationDoc = await firestore()
-                .collection('STATIONS')
-                .doc(data.stationId)
-                .get();
+              const stationDoc = await firestore().collection('STATIONS').doc(data.stationId).get();
               if (stationDoc.exists) {
-                const stationData = stationDoc.data();
-                console.log('Station data:', stationData);
-                transactions.push({
-                  id: doc.id,
-                  ...data,
-                  stationName: stationData.stationName || 'Không rõ',
-                  stationAddress: stationData.address || 'Không rõ',
-                });
-              } else {
-                console.log('Trạm không tồn tại cho stationId:', data.stationId);
-                transactions.push({
-                  id: doc.id,
-                  ...data,
-                  stationName: 'Không rõ',
-                  stationAddress: 'Không rõ',
-                });
+                stationData = stationDoc.data();
               }
             } catch (error) {
               console.log('Lỗi lấy thông tin trạm:', error.message);
-              transactions.push({
-                id: doc.id,
-                ...data,
-                stationName: 'Không rõ',
-                stationAddress: 'Không rõ',
-              });
             }
-          } else {
-            console.log('StationId không tồn tại trong giao dịch:', doc.id);
-            transactions.push({
-              id: doc.id,
-              ...data,
-              stationName: 'Không rõ',
-              stationAddress: 'Không rõ',
-            });
           }
+
+          transactions.push({
+            id: doc.id,
+            ...data,
+            bikeId: data.bikeId || null,
+            stationName: stationData.stationName || 'Không rõ',
+            stationAddress: stationData.address || 'Không rõ',
+          });
         }
-        console.log('Transactions cuối cùng:', transactions);
+
         setRentedBikes(transactions);
       }, (error) => {
         console.log('Lỗi lấy danh sách xe đang thuê:', error.message);
@@ -82,15 +64,9 @@ const RentedBikes = ({ navigation }) => {
     return () => unsubscribe();
   }, [user]);
 
-  const canCancelRent = (item) => {
-    return item.status === 'Đã xác nhận';
-  };
+  const handleCancelRent = (transactionId, bikeName, bikeId) => {
+    console.log('====> bikeId:', bikeId);
 
-  const canRequestReturn = (item) => {
-    return item.status === 'Đã xác nhận';
-  };
-
-  const handleCancelRent = (transactionId, bikeName) => {
     Alert.alert(
       'Xác nhận hủy thuê xe',
       `Bạn có chắc chắn muốn hủy thuê xe "${bikeName}" không?`,
@@ -101,16 +77,20 @@ const RentedBikes = ({ navigation }) => {
           style: 'destructive',
           onPress: async () => {
             try {
-              await firestore()
-                .collection('TRANSACTION')
-                .doc(transactionId)
-                .update({
-                  status: 'Đã hủy',
-                  updatedAt: firestore.Timestamp.fromDate(currentDate),
+              await firestore().collection('TRANSACTIONS').doc(transactionId).update({
+                status: 'Đã hủy',
+                updatedAt: firestore.Timestamp.fromDate(currentDate),
+              });
+
+              if (bikeId) {
+                await firestore().collection('BIKES').doc(bikeId).update({
+                  status: 'Có sẵn',
                 });
+              }
+
               Alert.alert('Thành công', 'Đã hủy thuê xe thành công!');
             } catch (error) {
-              console.log('Lỗi hủy thuê xe:', error.message);
+              console.error('Lỗi hủy thuê xe:', error.message);
               Alert.alert('Lỗi', 'Không thể hủy thuê xe. Vui lòng thử lại.');
             }
           },
@@ -131,16 +111,13 @@ const RentedBikes = ({ navigation }) => {
           style: 'destructive',
           onPress: async () => {
             try {
-              await firestore()
-                .collection('TRANSACTION')
-                .doc(transactionId)
-                .update({
-                  status: 'Yêu cầu trả',
-                  actualReturnDate: firestore.Timestamp.fromDate(currentDate),
-                });
+              await firestore().collection('TRANSACTIONS').doc(transactionId).update({
+                status: 'Yêu cầu trả',
+                actualReturnDate: firestore.Timestamp.fromDate(currentDate),
+              });
               Alert.alert('Thành công', 'Đã gửi yêu cầu trả xe. Vui lòng chờ admin xác nhận!');
             } catch (error) {
-              console.log('Lỗi yêu cầu trả xe:', error.message);
+              console.error('Lỗi yêu cầu trả xe:', error.message);
               Alert.alert('Lỗi', 'Không thể gửi yêu cầu trả xe. Vui lòng thử lại.');
             }
           },
@@ -150,55 +127,41 @@ const RentedBikes = ({ navigation }) => {
     );
   };
 
-  const renderRentedBike = ({ item }) => {
-    console.log('Rendering item:', item);
-    return (
-      <View style={styles.transactionItem}>
-        <View style={styles.transactionInfo}>
-          <Text style={styles.bikeName}>{item.bikeName || 'Tên xe không xác định'}</Text>
-          <Text style={styles.detailText}>
-            Ngày thuê: {item.rentDate ? new Date(item.rentDate.seconds * 1000).toLocaleDateString() : 'Chưa có'}
-          </Text>
-          <Text style={styles.detailText}>
-            Ngày trả: {item.returnDate ? new Date(item.returnDate.seconds * 1000).toLocaleDateString() : 'Chưa có'}
-          </Text>
-          <Text style={styles.detailText}>
-            Tổng chi phí: {item.totalPrice ? `${item.totalPrice.toLocaleString('vi-VN')} VNĐ` : 'Chưa có'}
-          </Text>
-          <Text style={styles.detailText}>Tên trạm: {item.stationName}</Text>
-          {/* map */}
-          <Text style={styles.detailText}>Địa chỉ: {item.stationAddress}</Text>
-          <TouchableOpacity
-            onPress={() => openMapWithAddress(item.stationAddress)}
-            style={{ marginTop: 6, alignSelf: 'flex-start' }}
-          >
-            <Icon name="map-marker" size={24} color="#0288D1" />
-          </TouchableOpacity>
-
-          <Text style={[styles.statusText, item.status === 'Đã xác nhận' && { color: '#0288D1' }]}>
-            Trạng thái: {item.status}
-          </Text>
-        </View>
-
-        {item.status === 'Đã xác nhận' && (
-          <View style={{ gap: 8 }}>
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={() => handleCancelRent(item.id, item.bikeName)}
-            >
-              <Text style={styles.cancelButtonText}>Hủy thuê xe</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.returnButton}
-              onPress={() => handleRequestReturn(item.id, item.bikeName)}
-            >
-              <Text style={styles.returnButtonText}>Yêu cầu trả xe</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+  const renderRentedBike = ({ item }) => (
+    <View style={styles.transactionItem}>
+      <View style={styles.transactionInfo}>
+        <Text style={styles.bikeName}>{item.bikeName || 'Tên xe không xác định'}</Text>
+        <Text style={styles.detailText}>
+          Ngày thuê: {item.rentDate ? new Date(item.rentDate.seconds * 1000).toLocaleDateString() : 'Chưa có'}
+        </Text>
+        <Text style={styles.detailText}>
+          Ngày trả: {item.returnDate ? new Date(item.returnDate.seconds * 1000).toLocaleDateString() : 'Chưa có'}
+        </Text>
+        <Text style={styles.detailText}>
+          Tổng chi phí: {item.totalPrice ? `${item.totalPrice.toLocaleString('vi-VN')} VNĐ` : 'Chưa có'}
+        </Text>
+        <Text style={styles.detailText}>Tên trạm: {item.stationName}</Text>
+        <Text style={styles.detailText}>Địa chỉ: {item.stationAddress}</Text>
+        <TouchableOpacity onPress={() => openMapWithAddress(item.stationAddress)} style={{ marginTop: 6 }}>
+          <Icon name="map-marker" size={24} color="#0288D1" />
+        </TouchableOpacity>
+        <Text style={[styles.statusText, item.status === 'Đã xác nhận' && { color: '#0288D1' }]}>
+          Trạng thái: {item.status}
+        </Text>
       </View>
-    );
-  };
+
+      {item.status === 'Đã xác nhận' && (
+        <View style={{ gap: 8 }}>
+          <TouchableOpacity style={styles.cancelButton} onPress={() => handleCancelRent(item.id, item.bikeName, item.bikeId)}>
+            <Text style={styles.cancelButtonText}>Hủy thuê xe</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.returnButton} onPress={() => handleRequestReturn(item.id, item.bikeName)}>
+            <Text style={styles.returnButtonText}>Yêu cầu trả xe</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </View>
+  );
 
   return (
     <View style={styles.container}>
@@ -210,7 +173,6 @@ const RentedBikes = ({ navigation }) => {
           data={rentedBikes}
           renderItem={renderRentedBike}
           keyExtractor={(item) => item.id}
-          style={styles.transactionList}
           contentContainerStyle={styles.transactionContent}
         />
       )}
@@ -229,9 +191,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#4CAF50',
     marginBottom: 20,
-  },
-  transactionList: {
-    flex: 1,
   },
   transactionContent: {
     paddingBottom: 20,

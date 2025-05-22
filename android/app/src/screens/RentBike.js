@@ -83,7 +83,7 @@ const RentBike = ({ route, navigation }) => {
           text: "Có",
           onPress: async () => {
             try {
-              await firestore().collection('TRANSACTION').add({
+              await firestore().collection('TRANSACTIONS').add({
                 userId: user.uid,
                 userEmail: user.email,
                 bikeId: bike.id,

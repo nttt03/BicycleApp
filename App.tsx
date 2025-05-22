@@ -4,8 +4,7 @@ import auth from "@react-native-firebase/auth";
 import { useEffect } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import Router from "./android/app/src/routers/Router";
-import { Provider as PaperProvider } from "react-native-paper"; // Thêm PaperProvider
-
+import { Provider as PaperProvider } from "react-native-paper";
 const App = () => {
   const USERS = firestore().collection("USERS");
   const admin = {
