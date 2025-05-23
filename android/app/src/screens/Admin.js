@@ -3,7 +3,7 @@ import RouterBike from "../routers/RouterBike";
 import RouterCustomer from "../routers/RouterCustomer";
 import RouterStation from "../routers/RouterStation";
 import RouterTransaction from "../routers/RouterTransaction";
-import Setting from "./Setting";
+import RouterSetting from "../routers/RouterSetting";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 
 const Tab = createBottomTabNavigator();
@@ -84,8 +84,8 @@ const Admin = () => (
       }}
     />
     <Tab.Screen
-      name="Setting"
-      component={Setting}
+      name="RouterSetting"
+      component={RouterSetting}
       options={{
         tabBarIcon: ({ color, focused }) => (
           <Icon

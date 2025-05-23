@@ -6,7 +6,7 @@ import { logout, useMyContextController } from "../store";
 import firestore from "@react-native-firebase/firestore";
 import auth from "@react-native-firebase/auth";
 
-const MoreTab = () => {
+const Setting = () => {
   const navigation = useNavigation();
   const [controller, dispatch] = useMyContextController();
   const { userLogin } = controller;
@@ -75,18 +75,23 @@ const MoreTab = () => {
         <Text style={styles.userName}>{userName}</Text>
 
         <TouchableOpacity style={styles.optionItem} onPress={() => navigation.navigate("UpdateInfo")}>
-          <Image source={require("../assets/icons/edit.png")} style={styles.optionIcon} />
-          <Text style={styles.optionText}>Cập nhật thông tin</Text>
+          <Text style={styles.optionText}>✏️   Cập nhật thông tin</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.optionItem} onPress={() => navigation.navigate("Statistics")}>
+          <Text style={styles.optionText}>📊   Xem thống kê</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.optionItem} onPress={() => navigation.navigate("Reports")}>
+          <Text style={styles.optionText}>🧾   Xem báo cáo</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.optionItem} onPress={() => navigation.navigate("ChangePassword")}>
-          <Image source={require("../assets/icons/key.png")} style={styles.optionIcon} />
-          <Text style={styles.optionText}>Đổi mật khẩu</Text>
+          <Text style={styles.optionText}>🔐   Đổi mật khẩu</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.optionItem} onPress={handleLogout}>
-          <Image source={require("../assets/icons/logout.jpg")} style={styles.optionIcon} />
-          <Text style={styles.optionText}>Đăng xuất</Text>
+          <Text style={styles.optionText}>🚪   Đăng xuất</Text>
         </TouchableOpacity>
       </View>
       <Image source={require("../assets/img_slide_velogo.png")} style={styles.slideVelogo} />
@@ -144,7 +149,8 @@ const styles = StyleSheet.create({
   },
   optionText: {
     fontSize: 16,
-    color: "#333",
+    fontWeight: "600",
+    paddingLeft: 4,
   },
   slideVelogo: {
     width: 400,
@@ -153,4 +159,4 @@ const styles = StyleSheet.create({
   }
 });
 
-export default MoreTab;
+export default Setting;

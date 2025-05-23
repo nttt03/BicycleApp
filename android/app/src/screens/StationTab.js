@@ -5,17 +5,23 @@ import {
   FlatList,
   Modal,
   TouchableOpacity,
+  Image
 } from "react-native";
 import { Text } from "react-native-paper";
 import firestore from "@react-native-firebase/firestore";
 import MapView, { Marker } from "react-native-maps";
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import Icon from "react-native-vector-icons/MaterialCommunityIcons";
+import { useNavigation } from "@react-navigation/native";
 
 const StationTab = () => {
   const [stations, setStations] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [region, setRegion] = useState(null);
+  const [bikeList, setBikeList] = useState([]);
+  const [bikeModalVisible, setBikeModalVisible] = useState(false);
+  const [selectedStationName, setSelectedStationName] = useState("");
+  const navigation = useNavigation();
 
   useEffect(() => {
     const fetchStations = async () => {
@@ -37,6 +43,26 @@ const StationTab = () => {
     fetchStations();
   }, []);
 
+  const fetchBikesForStation = async (stationId, stationName) => {
+    try {
+      const snapshot = await firestore()
+        .collection("BIKES")
+        .where("stationId", "==", stationId)
+        .where("status", "==", "Có sẵn")
+        .get();
+
+      const bikes = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setBikeList(bikes);
+      setSelectedStationName(stationName);
+      setBikeModalVisible(true);
+    } catch (error) {
+      console.error("Lỗi lấy dữ liệu xe đạp:", error.message);
+    }
+  };
+
   const openMap = (latitude, longitude) => {
     if (latitude && longitude) {
       const initialRegion = {
@@ -55,7 +81,7 @@ const StationTab = () => {
 
   const handleZoom = (zoomIn = true) => {
     if (!region) return;
-    const factor = zoomIn ? 0.5 : 2; // zoom in = giảm delta, zoom out = tăng delta
+    const factor = zoomIn ? 0.5 : 2;
     setRegion({
       ...region,
       latitudeDelta: region.latitudeDelta * factor,
@@ -73,9 +99,11 @@ const StationTab = () => {
       </View>
       <Text style={styles.stationDetail}>Địa chỉ: {item.address || "Chưa có địa chỉ"}</Text>
       <Text style={styles.stationDetail}>Trạng thái: {item.status || "Chưa xác định"}</Text>
-      <Text style={styles.stationDetail}>
-        Số xe khả dụng: {item.availableBikes || 0}/{item.totalBikes || 0}
-      </Text>
+      <TouchableOpacity
+        onPress={() => fetchBikesForStation(item.id, item.stationName)}
+      >
+        <Text style={{ color: '#4CAF50', marginTop: 6 }}>Xem xe có sẵn</Text>
+      </TouchableOpacity>
     </View>
   );
 
@@ -94,7 +122,7 @@ const StationTab = () => {
         />
       )}
 
-      {/* Modal hiển thị bản đồ */}
+      {/* Modal bản đồ */}
       <Modal visible={modalVisible} animationType="slide">
         <View style={{ flex: 1 }}>
           {region && (
@@ -104,29 +132,73 @@ const StationTab = () => {
               )}
             </MapView>
           )}
-
-          {/* Nút zoom in */}
           <TouchableOpacity
             style={[styles.zoomButton, { bottom: 100 }]}
             onPress={() => handleZoom(true)}
           >
             <Text style={styles.zoomText}>＋</Text>
           </TouchableOpacity>
-
-          {/* Nút zoom out */}
           <TouchableOpacity
             style={[styles.zoomButton, { bottom: 50 }]}
             onPress={() => handleZoom(false)}
           >
             <Text style={styles.zoomText}>−</Text>
           </TouchableOpacity>
-
-          {/* Nút đóng */}
           <TouchableOpacity
             style={styles.closeButton}
             onPress={() => setModalVisible(false)}
           >
             <Text style={{ color: "#FFF" }}>Đóng bản đồ</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
+
+      {/* Modal danh sách xe */}
+      <Modal visible={bikeModalVisible} animationType="slide">
+        <View style={{ flex: 1, padding: 20, backgroundColor: "#FFF" }}>
+          <Text style={{ fontSize: 20, fontWeight: "bold", marginBottom: 10 }}>
+            Xe tại trạm: {selectedStationName}
+          </Text>
+
+          {bikeList.length === 0 ? (
+            <Text>Không có xe khả dụng.</Text>
+          ) : (
+            <FlatList
+              data={bikeList}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  onPress={() => {
+                    setBikeModalVisible(false); // đóng modal trước
+                    navigation.navigate("RentBike", { bike: item });
+                  }}
+
+                  style={{
+                    marginBottom: 12,
+                    padding: 10,
+                    backgroundColor: "#F5F5F5",
+                    borderRadius: 8,
+                  }}
+                >
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    <Image source={require("../assets/icons/img_bike.png")} style={styles.bikeImage} />
+                    <View style={styles.bikeInfo}>
+                      <Text style={styles.bikeName}>Tên xe: {item.name || "Không có tên"}</Text>
+                      <Text>Loại: {item.type || "Không xác định"}</Text>
+                      <Text>Giá thuê: {item.price ? `${item.price} VND` : "Không rõ"}</Text>
+                      <Text style={styles.rentText}>Thuê xe</Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              )}
+            />
+          )}
+
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => setBikeModalVisible(false)}
+          >
+            <Text style={{ color: "#FFF" }}>Đóng</Text>
           </TouchableOpacity>
         </View>
       </Modal>
@@ -183,7 +255,7 @@ const styles = StyleSheet.create({
     bottom: 30,
     left: "35%",
     right: "35%",
-    backgroundColor: "#3399FF",
+    backgroundColor: "#4CAF50",
     padding: 10,
     borderRadius: 8,
     alignItems: "center",
@@ -205,6 +277,36 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
   },
+  bikeItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F5F5F5",
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 12,
+  },
+
+  bikeImage: {
+    width: 60,
+    height: 60,
+    resizeMode: "contain",
+    marginRight: 12,
+  },
+
+  bikeInfo: {
+    flex: 1,
+  },
+
+  bikeName: {
+    fontWeight: "bold",
+    marginBottom: 4,
+  },
+
+  rentText: {
+    color: "#4CAF50",
+    marginTop: 4,
+  }
+
 });
 
 export default StationTab;
