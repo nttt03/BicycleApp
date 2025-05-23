@@ -1,56 +1,52 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
-  StyleSheet,
-  Image,
   Text,
-  TouchableOpacity,
+  StyleSheet,
   ScrollView,
+  TouchableOpacity,
   Modal,
 } from "react-native";
 import firestore from "@react-native-firebase/firestore";
 
-const BikeDetail = ({ route, navigation }) => {
-  const { bike } = route.params;
+const TransactionDetail = ({ route, navigation }) => {
+  const { transaction } = route.params;
 
-  const [stationName, setStationName] = useState("Đang tải...");
   const [modalVisible, setModalVisible] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
   const [modalIcon, setModalIcon] = useState("✅");
 
+  const [userName, setUserName] = useState("");
+  const [stationName, setStationName] = useState("");
+
   useEffect(() => {
-    const fetchStationName = async () => {
-      if (bike.stationId) {
-        try {
-          const stationDoc = await firestore().collection("STATIONS").doc(bike.stationId).get();
-          if (stationDoc.exists) {
-            const data = stationDoc.data();
-            setStationName(data.stationName || "Trạm không tên");
-          } else {
-            setStationName("Không tìm thấy trạm");
-          }
-        } catch (error) {
-          setStationName("Lỗi khi tải tên trạm");
-        }
-      } else {
-        setStationName("Không có thông tin trạm");
+    const fetchExtraData = async () => {
+      try {
+        const userDoc = await firestore().collection("USERS").doc(transaction.userId).get();
+        setUserName(userDoc.exists ? userDoc.data().fullName : "-");
+
+        const stationDoc = await firestore().collection("STATIONS").doc(transaction.stationId).get();
+        setStationName(stationDoc.exists ? stationDoc.data().stationName : "-");
+      } catch (error) {
+        console.error("Lỗi khi tải dữ liệu người dùng hoặc trạm:", error);
       }
     };
-    fetchStationName();
-  }, [bike.stationId]);
+
+    fetchExtraData();
+  }, []);
 
   const handleDelete = () => {
     setModalIcon("❓");
-    setModalMessage("Bạn có chắc muốn xóa xe này không?");
+    setModalMessage("Bạn có chắc muốn xóa giao dịch này không?");
     setModalVisible(true);
   };
 
   const confirmDelete = async () => {
     setModalVisible(false);
     try {
-      await firestore().collection("BIKES").doc(bike.id).delete();
+      await firestore().collection("TRANSACTIONS").doc(transaction.id).delete();
       setModalIcon("✅");
-      setModalMessage("Đã xóa xe thành công!");
+      setModalMessage("Đã xóa giao dịch thành công!");
       setModalVisible(true);
     } catch (error) {
       setModalIcon("❌");
@@ -59,93 +55,55 @@ const BikeDetail = ({ route, navigation }) => {
     }
   };
 
-  const formatPrice = (price) => {
-    if (!price && price !== 0) return "-";
-    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  };
-
   const formatDate = (timestamp) => {
     if (!timestamp) return "-";
-    let dateObj;
-    
-    if (timestamp.toDate) {
-      dateObj = timestamp.toDate();
-    } else if (timestamp.seconds) {
-      dateObj = new Date(timestamp.seconds * 1000);
-    } else {
-      dateObj = new Date(timestamp);
-    }
-
-    const pad = (n) => (n < 10 ? "0" + n : n);
-
-    const d = pad(dateObj.getDate());
-    const m = pad(dateObj.getMonth() + 1);
-    const y = dateObj.getFullYear();
-
-    const hh = pad(dateObj.getHours());
-    const mm = pad(dateObj.getMinutes());
-    const ss = pad(dateObj.getSeconds());
-
-    return `${d}/${m}/${y} ${hh}:${mm}:${ss}`;
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    return date.toLocaleString("vi-VN");
   };
 
   return (
     <>
       <ScrollView contentContainerStyle={styles.container}>
-        <Image
-          source={require("../assets/icons/img_bike.png")}
-          style={styles.bikeImage}
-          resizeMode="contain"
-        />
-
         <View style={styles.infoContainer}>
-          <Text style={styles.name}>{bike.name}</Text>
-
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Loại xe:</Text>
-            <Text style={styles.value}>{bike.type}</Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Giá thuê:</Text>
-            <Text style={styles.value}>{formatPrice(bike.price)} VNĐ/Ngày</Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Tình trạng:</Text>
-            <Text style={styles.value}>{bike.status}</Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Ngày tạo:</Text>
-            <Text style={styles.value}>{formatDate(bike.createdAt)}</Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Cập nhật lúc:</Text>
-            <Text style={styles.value}>{formatDate(bike.updatedAt)}</Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Thuộc trạm:</Text>
-            <Text style={styles.value}>{stationName}</Text>
-          </View>
+          {[
+            { label: "ID xe", value: transaction.bikeId },
+            { label: "Tên xe", value: transaction.bikeName },
+            { label: "Tên khách hàng", value: userName },
+            { label: "Email khách hàng", value: transaction.userEmail },
+            { label: "Tên trạm", value: stationName },
+            { label: "Tổng tiền thuê", value: transaction.totalPrice?.toLocaleString() + " VNĐ" },
+            { label: "Trạng thái", value: transaction.status },
+            { label: "Thời gian thuê", value: formatDate(transaction.rentDate) },
+            { label: "Thời gian trả (dự kiến)", value: formatDate(transaction.returnDate) },
+            { label: "Thời gian trả (thực tế)", value: formatDate(transaction.actualReturnDate) },
+            { label: "Thời gian tạo", value: formatDate(transaction.createdAt) },
+            { label: "Cập nhật", value: formatDate(transaction.updatedAt) },
+          ].map((item, index) => (
+            <View style={styles.infoRow} key={index}>
+              <Text style={styles.label}>{item.label}:</Text>
+              <Text style={styles.value}>{item.value || "-"}</Text>
+            </View>
+          ))}
         </View>
 
         <View style={styles.buttonRow}>
           <TouchableOpacity
             style={[styles.button, styles.editButton]}
-            onPress={() => navigation.navigate("EditBike", { bike })}
+            onPress={() => navigation.navigate("EditTransaction", { transaction })}
           >
             <Text style={styles.buttonText}>Sửa</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.button, styles.deleteButton]} onPress={handleDelete}>
+          <TouchableOpacity
+            style={[styles.button, styles.deleteButton]}
+            onPress={handleDelete}
+          >
             <Text style={styles.buttonText}>Xóa</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
 
+      {/* Modal */}
       <Modal transparent visible={modalVisible} animationType="fade">
         <View style={styles.modalOverlay}>
           <View
@@ -155,7 +113,7 @@ const BikeDetail = ({ route, navigation }) => {
                 ? { borderLeftColor: "#4CAF50" }
                 : modalIcon === "❌"
                 ? { borderLeftColor: "#F44336" }
-                : { borderLeftColor: "#FFC107" }, 
+                : { borderLeftColor: "#FFC107" },
             ]}
           >
             <Text style={styles.modalEmoji}>{modalIcon}</Text>
@@ -196,27 +154,15 @@ const BikeDetail = ({ route, navigation }) => {
   );
 };
 
-export default BikeDetail;
+export default TransactionDetail;
 
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-    backgroundColor: "#E8F5E9",
+    backgroundColor: "#E8F5E9", // màu nền xanh lá nhạt
     flexGrow: 1,
     justifyContent: "flex-start",
     alignItems: "center",
-  },
-  bikeImage: {
-    width: "80%",
-    height: 200,
-    borderRadius: 15,
-    marginBottom: 30,
-    backgroundColor: "white",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 8,
   },
   infoContainer: {
     width: "100%",
@@ -224,28 +170,24 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     padding: 20,
     marginBottom: 30,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
     elevation: 5,
   },
-  name: {
-    fontSize: 26,
+  title: {
+    fontSize: 24,
     fontWeight: "bold",
-    color: "#2E7D32",
+    color: "#388E3C",
     marginBottom: 20,
     textAlign: "center",
   },
   infoRow: {
     flexDirection: "row",
-    marginBottom: 8,
+    marginBottom: 10,
   },
   label: {
     flex: 2,
     fontSize: 16,
     fontWeight: "600",
-    color: "#4E944F",
+    color: "#2E7D32",
   },
   value: {
     flex: 3,
@@ -258,14 +200,14 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   button: {
-    flex: 0.48,
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: "center",
     elevation: 4,
+    width: "48%",
   },
   editButton: {
-    backgroundColor: "#388E3C",
+    backgroundColor: "#4CAF50",
   },
   deleteButton: {
     backgroundColor: "#D32F2F",
@@ -275,7 +217,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
   },
-
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.3)",
@@ -288,53 +229,49 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 25,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
     elevation: 6,
     borderLeftWidth: 6,
   },
-    modalEmoji: {
+  modalEmoji: {
     fontSize: 48,
     marginBottom: 15,
   },
-    modalMessage: {
+  modalMessage: {
     fontSize: 18,
     textAlign: "center",
     marginBottom: 20,
     color: "#333",
   },
-    confirmButtonsRow: {
+  confirmButtonsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     width: "100%",
   },
-    modalButton: {
+  modalButton: {
     flex: 1,
     paddingVertical: 12,
     borderRadius: 10,
     marginHorizontal: 8,
     alignItems: "center",
   },
-    cancelButton: {
+  cancelButton: {
     backgroundColor: "#BDBDBD",
   },
-    confirmButton: {
+  confirmButton: {
     backgroundColor: "#D32F2F",
   },
-    modalButtonText: {
+  modalButtonText: {
     color: "white",
     fontSize: 16,
     fontWeight: "600",
   },
-    closeButton: {
+  closeButton: {
     backgroundColor: "#388E3C",
     paddingVertical: 12,
     paddingHorizontal: 40,
     borderRadius: 12,
   },
-    closeButtonText: {
+  closeButtonText: {
     color: "white",
     fontSize: 16,
     fontWeight: "600",

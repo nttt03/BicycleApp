@@ -129,7 +129,7 @@ const AddNewBike = ({ navigation }) => {
 
         {/* Giá thuê */}
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Giá thuê (VNĐ/Giờ)</Text>
+          <Text style={styles.label}>Giá thuê (VNĐ/Ngày)</Text>
           <TextInput
             style={styles.input}
             placeholder="Ví dụ: 30000"

@@ -125,7 +125,7 @@ const EditBike = ({ route, navigation }) => {
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Giá thuê (VNĐ/Giờ)</Text>
+          <Text style={styles.label}>Giá thuê (VNĐ/Ngày)</Text>
           <TextInput
             style={styles.input}
             value={price}

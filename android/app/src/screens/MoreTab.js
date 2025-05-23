@@ -10,29 +10,9 @@ const MoreTab = () => {
   const navigation = useNavigation();
   const [controller, dispatch] = useMyContextController();
   const { userLogin } = controller;
-
   const [userName, setUserName] = useState("Người dùng");
+  const [gender, setGender] = useState("Nam");
 
-  // Lấy tên người dùng từ Firestore
-  // useEffect(() => {
-  //   const user = auth().currentUser;
-  //   if (user) {
-  //     const email = user.email;
-  //     const unsubscribe = firestore()
-  //       .collection("USERS")
-  //       .doc(email)
-  //       .onSnapshot((doc) => {
-  //         if (doc.exists) {
-  //           const userData = doc.data();
-  //           setUserName(userData.fullName || "Người dùng");
-  //         }
-  //       }, (error) => {
-  //         console.log("Lỗi lấy thông tin người dùng:", error.message);
-  //       });
-
-  //     return () => unsubscribe();
-  //   }
-  // }, []);
   useEffect(() => {
   const user = auth().currentUser;
   if (user) {
@@ -44,6 +24,7 @@ const MoreTab = () => {
         if (!querySnapshot.empty) {
           const userData = querySnapshot.docs[0].data();
           setUserName(userData.fullName || "Người dùng");
+          setGender(userData.gender || "nam");
         } else {
           console.log("Không tìm thấy thông tin người dùng với email:", email);
         }
@@ -83,9 +64,14 @@ const MoreTab = () => {
     <View style={styles.container}>
       <View style={styles.profileBox}>
         <Image
-          source={require("../assets/icons/user.png")}
-          style={styles.avatar}
+          source={
+            gender === "Nữ"
+              ? require("../assets/avatar_female.png")
+              : require("../assets/avatar_male.png")
+          }
+          style={styles.userImage}
         />
+        
         <Text style={styles.userName}>{userName}</Text>
 
         <TouchableOpacity style={styles.optionItem} onPress={() => navigation.navigate("UpdateInfo")}>
@@ -127,6 +113,14 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     marginBottom: 10,
+  },
+  userImage: {
+    marginRight: 10,
+    width: 60,
+    height: 60,
+    borderRadius: 30, 
+    borderWidth: 2,
+    borderColor: "#FFF",
   },
   userName: {
     fontSize: 18,

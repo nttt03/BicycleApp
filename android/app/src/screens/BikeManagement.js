@@ -50,7 +50,7 @@ const BikeManagement = ({ navigation }) => {
         <View style={styles.bikeInfo}>
           <Text style={styles.bikeName}>{item.name}</Text>
           <Text style={styles.bikeText}>Loại xe: {item.type}</Text>
-          <Text style={styles.bikeText}>Giá: {formatPrice(item.price)} VNĐ/Giờ</Text>
+          <Text style={styles.bikeText}>Giá: {formatPrice(item.price)} VNĐ/Ngày</Text>
           <Text style={styles.bikeText}>Tình trạng: {item.status}</Text>
         </View>
       </Pressable>

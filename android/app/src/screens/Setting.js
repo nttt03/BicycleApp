@@ -6,34 +6,35 @@ import { logout, useMyContextController } from "../store";
 import firestore from "@react-native-firebase/firestore";
 import auth from "@react-native-firebase/auth";
 
-const Setting = () => {
+const MoreTab = () => {
   const navigation = useNavigation();
   const [controller, dispatch] = useMyContextController();
   const { userLogin } = controller;
-
   const [userName, setUserName] = useState("Người dùng");
+  const [gender, setGender] = useState("Nam");
 
   useEffect(() => {
-    const user = auth().currentUser;
-    if (user) {
-      const email = user.email;
-      const unsubscribeUser = firestore()
-        .collection("USERS")
-        .where("email", "==", email)
-        .onSnapshot((querySnapshot) => {
-          if (!querySnapshot.empty) {
-            const userData = querySnapshot.docs[0].data();
-            setUserName(userData.fullName || "Người dùng");
-          } else {
-            console.log("Không tìm thấy thông tin người dùng với email:", email);
-          }
-        }, (error) => {
-          console.log("Lỗi khi lấy thông tin người dùng:", error.message);
-        });
+  const user = auth().currentUser;
+  if (user) {
+    const email = user.email;
+    const unsubscribeUser = firestore()
+      .collection("USERS")
+      .where("email", "==", email)
+      .onSnapshot((querySnapshot) => {
+        if (!querySnapshot.empty) {
+          const userData = querySnapshot.docs[0].data();
+          setUserName(userData.fullName || "Người dùng");
+          setGender(userData.gender || "nam");
+        } else {
+          console.log("Không tìm thấy thông tin người dùng với email:", email);
+        }
+      }, (error) => {
+        console.log("Lỗi khi lấy thông tin người dùng:", error.message);
+      });
 
-      return () => unsubscribeUser();
-    }
-  }, []);
+    return () => unsubscribeUser();
+  }
+}, []);
 
   // Nếu userLogin = null thì quay về màn hình Login
   useEffect(() => {
@@ -63,9 +64,14 @@ const Setting = () => {
     <View style={styles.container}>
       <View style={styles.profileBox}>
         <Image
-          source={require("../assets/icons/user.png")}
-          style={styles.avatar}
+          source={
+            gender === "Nữ"
+              ? require("../assets/avatar_female.png")
+              : require("../assets/avatar_male.png")
+          }
+          style={styles.userImage}
         />
+        
         <Text style={styles.userName}>{userName}</Text>
 
         <TouchableOpacity style={styles.optionItem} onPress={() => navigation.navigate("UpdateInfo")}>
@@ -108,6 +114,14 @@ const styles = StyleSheet.create({
     height: 60,
     marginBottom: 10,
   },
+  userImage: {
+    marginRight: 10,
+    width: 60,
+    height: 60,
+    borderRadius: 30, 
+    borderWidth: 2,
+    borderColor: "#FFF",
+  },
   userName: {
     fontSize: 18,
     fontWeight: "bold",
@@ -139,4 +153,4 @@ const styles = StyleSheet.create({
   }
 });
 
-export default Setting;
+export default MoreTab;

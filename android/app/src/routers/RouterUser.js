@@ -27,7 +27,7 @@ const RouterUser = () => {
       <Stack.Screen name="HomeTab" component={HomeTab} options={{ headerShown: false }} />
       <Stack.Screen name="DetailBike" component={DetailBike} options={{ headerShown: false }} />
       <Stack.Screen name="RentBike" component={RentBike} options={{ headerShown: false }} />
-      <Stack.Screen name="RentedBikes" component={RentedBikes} />
+      <Stack.Screen name="RentedBikes" component={RentedBikes} options={{ headerShown: false }}/>
     </Stack.Navigator>
   );
 };
